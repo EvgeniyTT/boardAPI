@@ -1,0 +1,33 @@
+{
+  "name": "board_api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EvgeniyTT/boardAPI.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EvgeniyTT/boardAPI/issues"
+  },
+  "homepage": "https://github.com/EvgeniyTT/boardAPI#readme",
+  "dependencies": {
+    "cors": "^2.8.1",
+    "dotenv": "^2.0.0",
+    "express": "^4.14.0",
+    "node-static": "^0.7.9",
+    "socket.io": "^1.5.1",
+    "socket.io-as-promised": "^1.0.0",
+    "ws": "^1.1.1",
+    "mongodb": "^2.2.8",
+    "mongoose": "^4.5.10"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
