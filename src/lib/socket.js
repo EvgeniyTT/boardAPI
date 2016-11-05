@@ -1,60 +1,87 @@
+const jwt = require('jsonwebtoken');
+const socketioJwt = require('socketio-jwt');
+
 require('../models/board.js');
+require('../models/user.js');
 const db = require('../lib/mongo.js');
 const ObjectId = require('mongoose').Types.ObjectId;
 const Board = db.model('Board');
+const User = db.model('User');
 
 module.exports = (io) => {
+
   io.on('connection', function (socket) {
 
-    socket.on('getBoards', (data) => {
-      //data should contain userID so we can find user boards
-      Board.find({}, {name: 1}, function (err, boards) {
-        // if (err) return handleError(err);
-        socket.emit('boardList', boards);
-      })
+    socket.on('signup', async (user) => {
+      const isUserExist = await User.findOne({username: user.username});
+      if (isUserExist) {
+        socket.emit('signupError', 'User with such username already exist');
+      } else {
+        const newUser = new User(user);
+        const savedUser = await newUser.save();
+        socket.emit('logged', savedUser);
+      }
     })
 
-    socket.on('addBoard', (boardName) => {
-      const newBoard = new Board ({
-        name : boardName
-      , data : []
-      })
+    socket.on('login', async (data) => {
+      try {
+        const user =  await User.findOne({username: data.username, password: data.password});
+        socket.emit('logged', user);
+      } catch(err) {
+        socket.emit('error', err);
+      }
+    })
 
-      newBoard.save(newBoard, function (err, board) {
-        if (err) {console.log("ERROR!!!!!!!!!!!! : ", err)}; //need to handle errors
-        Board.find({}, {name: 1}, function (err, boards) {
-          // if (err) return handleError(err);
-          io.emit('boardList', boards);
-        })
+    socket.on('getBoardList', async (user) => {
+      try {
+        const publicBoards =  await Board.find({ restriction: "public" }, { name: 1 });
+        const privatBoards =  await Board.find({ users: user._id }, { name: 1 });
+        socket.emit('boardList', {public: publicBoards, private: privatBoards});
+      } catch(err) {
+        socket.emit('error', err);
+      }
+    })
+
+    socket.on('addBoard', async (board, user_ID) => {
+      try {
+        const newBoard = new Board (board);
+        await newBoard.save();
         socket.join(board._id);
-        socket.emit('getBoardData', board);
-      })
+        socket.emit('boardData', board);
+      } catch(err) {
+        socket.emit('error', err);
+      }
     })
 
-    socket.on('getBoardData', (boardID) => {
-      socket.join(boardID);
-      Board.findOne({_id : boardID}, function (err, board) {
-        if (err) {console.log("ERROR!!!!!!!!!!!! : ", err)}; //need to handle errors
-        socket.emit('getBoardData', board);
-      })
+    socket.on('getBoard', async (boardID) => {
+      try {
+        socket.join(boardID);
+        const board = await Board.findOne({_id : boardID});
+        socket.emit('boardData', board);
+      } catch(err) {
+        socket.emit('error', err);
+      }
     })
 
-    socket.on('boardUpdate', (board) => {
-      Board.update({ _id: new ObjectId(board._id) }, board, {upsert:true}, function (err, doc) {
-        if (err) {console.log("ERROR!!!!!!!!!!!! : ", err)}; //need to handle errors
+    socket.on('updateBoard', async (board) => {
+      try {
+        await Board.update({ _id: new ObjectId(board._id) }, board, {upsert:true});
         io.to(board._id).emit('getBoardData', board);
-      })
+      } catch(err) {
+        socket.emit('error', err);
+      }
     })
 
-    socket.on('deleteBoard', (boardID) => {
-      Board.remove({ _id: boardID }, function (err, result) {
-        if (err) {console.log("ERROR!!!!!!!!!!!! : ", err)}; //need to handle errors
-        io.to(boardID).emit('getBoardData', result); // !!!!!!!! need to handle waht to send if board is removed !!!!!!
-        Board.find({}, {name: 1}, function (err, boards) {
-          // if (err) return handleError(err);
-          io.emit('boardList', boards);
-        })
-      })
+    socket.on('deleteBoard', async (boardID, userID) => {
+      try {
+        const result = await Board.remove({ _id: boardID });
+        io.to(boardID).emit('getBoardData', result);
+        const publicBoards =  await Board.find({ restriction: "public" }, { name: 1 });
+        const privatBoards =  await Board.find({ users: userID }, { name: 1 });
+        socket.emit('boardList', {public: publicBoards, private: privatBoards});
+      } catch(err) {
+        socket.emit('error', err);
+      }
     })
 
   });
