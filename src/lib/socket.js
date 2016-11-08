@@ -71,7 +71,7 @@ module.exports = (io) => {
     socket.on('updateBoard', async (board) => {
       try {
         await Board.update({ _id: new ObjectId(board._id) }, board, {upsert:true});
-        io.to(board._id).emit('getBoardData', board);
+        io.to(board._id).emit('boardData', board);
       } catch(err) {
         socket.emit('error', err);
       }
@@ -80,7 +80,7 @@ module.exports = (io) => {
     socket.on('deleteBoard', async (boardID, userID) => {
       try {
         const result = await Board.remove({ _id: boardID });
-        io.to(boardID).emit('getBoardData', result);
+        io.to(boardID).emit('boardData', result);
         const publicBoards =  await Board.find({ restriction: "public" }, { name: 1 });
         const privatBoards =  await Board.find({ users: userID }, { name: 1 });
         socket.emit('boardList', {public: publicBoards, private: privatBoards});
