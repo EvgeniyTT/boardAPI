@@ -26,9 +26,14 @@ module.exports = (io) => {
     socket.on('login', async (data) => {
       try {
         const user =  await User.findOne({username: data.username, password: data.password});
-        socket.emit('logged', user);
+        if (user) {
+          socket.emit('logged', user);
+        } else {
+          socket.emit('loginError', 'Wrong username or password');
+        }
+
       } catch(err) {
-        socket.emit('error', err);
+        socket.emit('loginError', err);
       }
     })
 
