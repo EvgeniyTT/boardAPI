@@ -8,10 +8,10 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const Board = db.model('Board');
 const User = db.model('User');
 
-const notATokenSectet = 'd3hA&bhYh2tn72bXvb'
+const tokenSecret = 'd3hA&bhYh2tn72bXvb'
 
 function makeToken(user) {
-  return jwt.sign(user, notATokenSectet, {
+  return jwt.sign(user, tokenSecret, {
     expiresIn: '24h'
   });
 }
@@ -34,8 +34,9 @@ module.exports = (io) => {
 
     socket.on('login', async (data) => {
       try {
-        const user =  await User.findOne({username: data.username, password: data.password});
-        if (user) {
+        const user =  await User.findOne({username: data.username});
+        const isValidPassword =  await user.comparePassword(data.password);
+        if (isValidPassword) {
           let token = makeToken(user);
           socket.emit('logged', user, token);
         } else {
@@ -48,19 +49,19 @@ module.exports = (io) => {
 
     socket.on('getBoardList', async (token) => {
       try {
-        const decode = jwt.verify(token, notATokenSectet);
+        const decode = jwt.verify(token, tokenSecret);
         const user = decode._doc;
         const publicBoards =  await Board.find({ restriction: "public" }, { name: 1 });
         const privatBoards =  await Board.find({ users: user._id }, { name: 1 });
         socket.emit('boardList', {public: publicBoards, private: privatBoards});
       } catch(err) {
-        socket.emit('internalError', err);
+        console.log('internalError', err);
       }
     })
 
     socket.on('addBoard', async (token, board) => {
       try {
-        const decode = jwt.verify(token, notATokenSectet);
+        const decode = jwt.verify(token, tokenSecret);
         const user = decode._doc;
         const newBoard = new Board (board);
         await newBoard.save();
@@ -73,7 +74,7 @@ module.exports = (io) => {
 
     socket.on('getBoard', async (token, boardID) => {
       try {
-        const decode = jwt.verify(token, notATokenSectet);
+        const decode = jwt.verify(token, tokenSecret);
         const user = decode._doc;
         socket.join(boardID);
         const board = await Board.findOne({_id : boardID});
@@ -85,7 +86,7 @@ module.exports = (io) => {
 
     socket.on('updateBoard', async (token, board) => {
       try {
-        const decode = jwt.verify(token, notATokenSectet);
+        const decode = jwt.verify(token, tokenSecret);
         const user = decode._doc;
         await Board.update({ _id: new ObjectId(board._id) }, board, {upsert:true});
         io.to(board._id).emit('boardData', board);
@@ -96,7 +97,7 @@ module.exports = (io) => {
 
     socket.on('deleteBoard', async (token, boardID) => {
       try {
-        const decode = jwt.verify(token, notATokenSectet);
+        const decode = jwt.verify(token, tokenSecret);
         const user = decode._doc;
         const result = await Board.remove({ _id: boardID });
         io.to(boardID).emit('boardData', result);
