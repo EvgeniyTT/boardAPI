@@ -21,15 +21,19 @@ module.exports = (io) => {
   io.on('connection', function (socket) {
 
     socket.on('signup', async (user) => {
-      const isUserExist = await User.findOne({username: user.username});
-      if (isUserExist) {
-        socket.emit('signupError', 'User with such username already exist');
-      } else {
-        const newUser = new User(user);
-        const savedUser = await newUser.save();
-        let token = makeToken(user);
-        socket.emit('logged', savedUser, token);
-      }
+      try {
+        const isUserExist = await User.findOne({username: user.username});
+        if (isUserExist) {
+          socket.emit('signupError', 'User with such username already exist');
+        } else {
+          const newUser = new User(user);
+          const savedUser = await newUser.save();
+          let token = makeToken(savedUser);
+          socket.emit('logged', savedUser, token);
+        }
+      } catch(err) {
+          socket.emit('loginError', 'Some internal error occured, please contact support team.');
+        }
     })
 
     socket.on('login', async (data) => {
@@ -60,6 +64,7 @@ module.exports = (io) => {
         socket.emit('boardList', {public: publicBoards, private: privatBoards});
       } catch(err) {
         console.log('internalError', err);
+        socket.emit('internalError', err);
       }
     })
 
@@ -72,6 +77,7 @@ module.exports = (io) => {
         socket.join(board._id);
         socket.emit('boardData', board);
       } catch(err) {
+        console.log('internalError', err);
         socket.emit('internalError', err);
       }
     })
@@ -84,6 +90,7 @@ module.exports = (io) => {
         const board = await Board.findOne({_id : boardID});
         socket.emit('boardData', board);
       } catch(err) {
+        console.log('internalError', err);
         socket.emit('internalError', err);
       }
     })
@@ -95,6 +102,7 @@ module.exports = (io) => {
         await Board.update({ _id: new ObjectId(board._id) }, board, {upsert:true});
         io.to(board._id).emit('boardData', board);
       } catch(err) {
+        console.log('internalError', err);
         socket.emit('internalError', err);
       }
     })
@@ -109,6 +117,7 @@ module.exports = (io) => {
         const privatBoards =  await Board.find({ users: user._id }, { name: 1 });
         socket.emit('boardList', {public: publicBoards, private: privatBoards});
       } catch(err) {
+        console.log('internalError', err);
         socket.emit('internalError', err);
       }
     })
