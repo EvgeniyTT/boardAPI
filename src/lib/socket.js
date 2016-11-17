@@ -35,13 +35,16 @@ module.exports = (io) => {
     socket.on('login', async (data) => {
       try {
         const user =  await User.findOne({username: data.username});
+        if(!user) {
+          socket.emit('loginError', 'There is no user with such username');
+          return;
+        }
         const isValidPassword =  await user.comparePassword(data.password);
-        console.log('isValidPassword: ',isValidPassword);
         if (isValidPassword) {
           let token = makeToken(user);
           socket.emit('logged', user, token);
         } else {
-          socket.emit('loginError', 'Wrong username or password');
+          socket.emit('loginError', 'Wrong password');
         }
       } catch(err) {
         socket.emit('loginError', 'Some internal error occured, please contact support team.');
