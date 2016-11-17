@@ -8,7 +8,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const Board = db.model('Board');
 const User = db.model('User');
 
-const tokenSecret = 'd3hA&bhYh2tn72bXvb'
+const tokenSecret = 'd3hA&bhYh2tn72bXvb';
 
 function makeToken(user) {
   return jwt.sign(user, tokenSecret, {
@@ -36,6 +36,7 @@ module.exports = (io) => {
       try {
         const user =  await User.findOne({username: data.username});
         const isValidPassword =  await user.comparePassword(data.password);
+        console.log('isValidPassword: ',isValidPassword);
         if (isValidPassword) {
           let token = makeToken(user);
           socket.emit('logged', user, token);

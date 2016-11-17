@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/EvgeniyTT/boardAPI#readme",
   "dependencies": {
+    "bcryptjs": "^2.3.0",
     "cors": "^2.8.1",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
@@ -27,8 +28,7 @@
     "socket.io": "^1.5.1",
     "socket.io-as-promised": "^1.0.0",
     "socketio-jwt": "^4.5.0",
-    "ws": "^1.1.1",
-    "bcrypt": "^0.8.7"
+    "ws": "^1.1.1"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"
