@@ -8,7 +8,7 @@ const app = require('../app');
 const debug = require('debug')('app:server');
 const http = require('http');
 const server = http.createServer(app);
-const io = require('socket.io')(server, {origins: '*'});
+const io = require('socket.io')(server, {origins: '*:*'});
 require('../lib/socket.js')(io);
 
 /**
