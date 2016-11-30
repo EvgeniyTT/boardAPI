@@ -74,7 +74,7 @@ module.exports = (io) => {
         const user = decode._doc;
         const newBoard = new Board (board);
         await newBoard.save();
-        socket.join(board._id);
+        socket.join(newBoard._id);
         socket.emit('boardData', newBoard);
       } catch(err) {
         console.log('internalError', err);
