@@ -75,7 +75,7 @@ module.exports = (io) => {
         const newBoard = new Board (board);
         await newBoard.save();
         socket.join(board._id);
-        socket.emit('boardData', board);
+        socket.emit('boardData', newBoard);
       } catch(err) {
         console.log('internalError', err);
         socket.emit('internalError', err);
@@ -99,7 +99,7 @@ module.exports = (io) => {
       try {
         const decode = jwt.verify(token, tokenSecret);
         const user = decode._doc;
-        await Board.update({ _id: new ObjectId(board._id) }, board, {upsert:true});
+        await Board.update({ _id: board._id }, board);
         io.to(board._id).emit('boardData', board);
       } catch(err) {
         console.log('internalError', err);
