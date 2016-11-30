@@ -11,14 +11,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-// app.all('*', function(req, res, next) {
-//      var origin = req.get('origin'); 
-//      res.header('Access-Control-Allow-Origin', origin);
-//      res.header("Access-Control-Allow-Headers", "X-Requested-With");
-//      res.header('Access-Control-Allow-Headers', 'Content-Type');
-//      next();
-// });
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   const err = new Error('Not Found');
